@@ -4,3 +4,5 @@
 /lib/
 /share/
 pyvenv.cfg
+/data/
+*.env
