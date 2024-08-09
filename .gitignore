@@ -6,3 +6,5 @@
 pyvenv.cfg
 /data/
 *.env
+/etc/
+/chroma_afc_sunday_school_lessons_db/
