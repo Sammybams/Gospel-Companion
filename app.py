@@ -68,7 +68,7 @@ import langchain
 langchain.verbose = False
 
 # LLM - Azure OpenAI
-llm = ChatOpenAI(temperature = 0.6, openai_api_key = os.getenv("API_KEY"), openai_api_base = os.getenv("ENDPOINT"), model_name="gpt-35-turbo", engine="Voicetask")
+llm = ChatOpenAI(temperature = 0.3, openai_api_key = os.getenv("API_KEY"), openai_api_base = os.getenv("ENDPOINT"), model_name="gpt-35-turbo", engine="Voicetask")
 
 # Loading Junior Lessons
 from langchain_chroma import Chroma
@@ -82,22 +82,24 @@ vector_store_junior = Chroma(
 
 # QA Model
 
-retriever_j = vector_store_junior.as_retriever(search_kwargs={'k': 5})
+retriever_j = vector_store_junior.as_retriever(search_kwargs={'k': 3})
 
-qa_stuff = RetrievalQA.from_chain_type(
-    llm = llm, 
-    chain_type = "stuff", 
-    retriever = retriever_j, 
-    verbose = False,
-    chain_type_kwargs = {
-        "verbose": True,
-        "prompt": prompt,
-        "memory": ConversationBufferWindowMemory(
-                k = 5,
-                memory_key = "history",
-                input_key = "question"),
-                }
-    )
+# Initialize session state for qa_stuff
+if 'qa_stuff' not in st.session_state:
+    st.session_state.qa_stuff = RetrievalQA.from_chain_type(
+                                    llm = llm, 
+                                    chain_type = "stuff", 
+                                    retriever = retriever_j, 
+                                    verbose = False,
+                                    chain_type_kwargs = {
+                                        "verbose": True,
+                                        "prompt": prompt,
+                                        "memory": ConversationBufferWindowMemory(
+                                                k = 5,
+                                                memory_key = "history",
+                                                input_key = "question")
+                                                }
+                                    )
 
 # Chatbot interface using streamlit and maintain chat history
 
@@ -127,10 +129,10 @@ def chatbot_interface():
     if prompt := st.chat_input("Message Gospel Companion"):
         # messages.chat_message("user").write(prompt)
         st.chat_message("user").write(prompt)
-        response = qa_stuff.run(prompt)
+        response = st.session_state.qa_stuff.run(prompt)
         st.chat_message("assistant").write(response)
         st.session_state.history.append({"user": prompt, "assistant": response})
-        # st.rerun()
+        st.rerun()
         
 
 # Run the chatbot interface
