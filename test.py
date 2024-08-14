@@ -18,6 +18,4 @@ def chatbot_interface():
             response = chatbot.get_response(prompt)
             messages.chat_message("assistant").write(response)
 
-
-
 chatbot_interface()

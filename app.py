@@ -128,8 +128,9 @@ def chatbot_interface():
         # messages.chat_message("user").write(prompt)
         st.chat_message("user").write(prompt)
         response = qa_stuff.run(prompt)
+        st.chat_message("assistant").write(response)
         st.session_state.history.append({"user": prompt, "assistant": response})
-        st.rerun()
+        # st.rerun()
         
 
 # Run the chatbot interface
