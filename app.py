@@ -134,7 +134,6 @@ def chatbot_interface():
         st.session_state.history.append({"user": prompt, "assistant": response})
         st.rerun()
         
-
 # Run the chatbot interface
 if __name__ == "__main__":
     chatbot_interface()
