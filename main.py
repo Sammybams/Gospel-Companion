@@ -11,31 +11,42 @@ users = {
     1: {
         "name": "Samuel Bamgbola",
         "ID": "0x1kjsd3wr",
-        "full_history": [],
-        "buffer_history": []
+        "full_history": {
+            "e": [],
+            "j": [],
+            "s": []
+        },
+        "buffer_history": {
+            "e": [],
+            "j": [],
+            "s": []
+        }
     }
 }
 
 class User(BaseModel):
     name: str
     ID: str
-    full_history: list
-    buffer_history: list
+    full_history: dict
+    buffer_history: dict
 
 class UpdateUser(BaseModel):
     name: Optional[str] = None
     ID: Optional[str] = None
-    full_history: Optional[str] = None
-    buffer_history: Optional[str] = None
+    full_history: Optional[dict] = None
+    buffer_history: Optional[dict] = None
 
+# Home
 @app.get("/")
 def index():
     return {"Project": "Gospel Companion"}
 
+# Get users by ID
 @app.get("/get-users{user_id}")
 def get_user(user_id: int = Path(description="The ID of the user you want to view", gt=0)):
     return users[user_id]
 
+# Create new user
 @app.post("/create-user/{user_id}")
 def create_user(user_id: int, user: User):
     if user_id in users:
@@ -43,6 +54,7 @@ def create_user(user_id: int, user: User):
     users[user_id] = user
     return users[user_id]
 
+# Update user information
 @app.put("/update-user/{user_id}")
 def update_user(user_id: int, user: UpdateUser):
     if user_id not in users:
@@ -65,21 +77,29 @@ def update_user(user_id: int, user: UpdateUser):
 @app.post("/rag-response/{user_id}")
 def rag_response(user_id: int, query: str, knowledge_base: str):
     current_user = get_user(user_id)
-    full_history = current_user["full_history"]
-    buffer_history = current_user["buffer_history"]
+    full_history = None
+    buffer_history = None
+    user_full_history = current_user["full_history"]
+    user_buffer_history = current_user["buffer_history"]
 
     knowledge_base_group = None
     vector_db, prompt_template = None, None
     if knowledge_base=='e':
         vector_db, prompt_template = elementary_db()
+        full_history = current_user["full_history"]["e"]
+        buffer_history = current_user["buffer_history"]["e"]
         knowledge_base_group = 3
 
     elif knowledge_base=='j':
         vector_db, prompt_template = junior_db()
+        full_history = current_user["full_history"]["j"]
+        buffer_history = current_user["buffer_history"]["j"]
         knowledge_base_group = 2
 
     else:
         vector_db, prompt_template = senior_db()
+        full_history = current_user["full_history"]["s"]
+        buffer_history = current_user["buffer_history"]["s"]
         knowledge_base_group = 1
 
     new_question = query
@@ -100,9 +120,11 @@ def rag_response(user_id: int, query: str, knowledge_base: str):
     if len(buffer_history)>10:
         buffer_history = buffer_history[2:]
 
+    user_full_history[knowledge_base] = full_history
+    user_buffer_history[knowledge_base] = buffer_history
     updated = UpdateUser()
-    updated.full_history = full_history
-    updated.buffer_history = buffer_history
+    updated.full_history = user_full_history
+    updated.buffer_history = user_buffer_history
     update_user(user_id, updated)
 
     return response, ref_titles_links
