@@ -7,6 +7,6 @@ pyvenv.cfg
 /data/
 *.env
 /etc/
-# /chroma_afc_sunday_school_lessons_db/
+/chroma_afc_sunday_school_lessons_db/
 /__pycache__/
 *.DS_Store
