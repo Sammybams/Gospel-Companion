@@ -4,35 +4,42 @@ from pydantic import BaseModel
 from functions import elementary_db, junior_db, senior_db
 from functions import context_document_retreival_similarity, get_conversation_summary
 from functions import qa_response, package_sources
+from config.database import client, collection
+from schemas.schema import serializer, get_last_added_item
+from bson import ObjectId
+
 
 app = FastAPI()
 
-users = {
-    1: {
-        "name": "Samuel Bamgbola",
-        "ID": "0x1kjsd3wr",
-        "full_history": {
-            "e": [],
-            "j": [],
-            "s": []
-        },
-        "buffer_history": {
-            "e": [],
-            "j": [],
-            "s": []
-        }
-    }
+# users = {
+#     1: {
+#         "name": "Samuel Bamgbola",
+#         "full_history": {
+#             "e": [],
+#             "j": [],
+#             "s": []
+#         },
+#         "buffer_history": {
+#             "e": [],
+#             "j": [],
+#             "s": []
+#         }
+#     }
+# }
+
+sample_dict = {
+    "e": [],
+    "j": [],
+    "s": [],
 }
 
 class User(BaseModel):
     name: str
-    ID: str
     full_history: dict
     buffer_history: dict
 
 class UpdateUser(BaseModel):
     name: Optional[str] = None
-    ID: Optional[str] = None
     full_history: Optional[dict] = None
     buffer_history: Optional[dict] = None
 
@@ -42,41 +49,59 @@ def index():
     return {"Project": "Gospel Companion"}
 
 # Get users by ID
-@app.get("/get-users{user_id}")
+@app.get("/get-user/{user_id}")
 def get_user(user_id: int = Path(description="The ID of the user you want to view", gt=0)):
-    return users[user_id]
+    return collection.find_one({"_id": ObjectId(user_id)})
+
+@app.get("/get-users")
+def get_users():
+    all_users = collection.find()
+    return [serializer(user) for user in all_users]
 
 # Create new user
-@app.post("/create-user/{user_id}")
-def create_user(user_id: int, user: User):
-    if user_id in users:
-        return {"Error": "User exists"}
-    users[user_id] = user
-    return users[user_id]
+@app.post("/create-user")
+def create_user(user: User):
+    # if user_id in users:
+    #     return {"Error": "User exists"}
+    # users[user_id] = user
+    new_user = dict(user)
+    new_user["full_history"] = sample_dict
+    new_user["buffer_history"] = sample_dict
+    collection.insert_one(new_user)
+    return serializer(get_last_added_item())
 
 # Update user information
-@app.put("/update-user/{user_id}")
-def update_user(user_id: int, user: UpdateUser):
-    if user_id not in users:
+@app.put("/update-user/{id}")
+def update_user(user_id: str, user: UpdateUser):
+    existing_user = collection.find_one({"_id": ObjectId(user_id)})
+
+    if not existing_user:
         return {"Error": "User does not exist"}
+    
+    existing_user = serializer(existing_user)
+    update_data = {}
 
     if user.name != None:
-        users[user_id]['name'] = user.name
-
-    if user.ID != None:
-        users[user_id]['ID'] = user.ID
+        update_data['name'] = user.name
+    else:
+        update_data['name'] = existing_user['name']
 
     if user.full_history != None:
-        users[user_id]['full_history'] = user.full_history
+        update_data['full_history'] = user.full_history
+    else:
+        update_data['full_history'] = existing_user['full_history']
 
     if user.buffer_history != None:
-        users[user_id]['buffer_history'] = user.buffer_history  
+        update_data['buffer_history'] = user.buffer_history  
+    else:
+        update_data['buffer_history'] = existing_user['buffer_history']
 
-    return users[user_id]
+    collection.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+    # return users[user_id]
 
 @app.post("/rag-response/{user_id}")
-def rag_response(user_id: int, query: str, knowledge_base: str):
-    current_user = get_user(user_id)
+def rag_response(user_id: str, query: str, knowledge_base: str):
+    current_user = serializer(get_user(user_id))
     full_history = None
     buffer_history = None
     user_full_history = current_user["full_history"]

@@ -8,5 +8,8 @@ pyvenv.cfg
 *.env
 /etc/
 /chroma_afc_sunday_school_lessons_db/
-/__pycache__/
+*__pycache__
 *.DS_Store
+hashing.py
+jwttoken.py
+oauth.py
