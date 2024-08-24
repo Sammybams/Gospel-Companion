@@ -50,8 +50,8 @@ def index():
 
 # Get users by ID
 @app.get("/get-user/{user_id}")
-def get_user(user_id: int = Path(description="The ID of the user you want to view", gt=0)):
-    return collection.find_one({"_id": ObjectId(user_id)})
+def get_user(user_id: str):
+    return serializer(collection.find_one({"_id": ObjectId(user_id)}))
 
 @app.get("/get-users")
 def get_users():
@@ -101,7 +101,8 @@ def update_user(user_id: str, user: UpdateUser):
 
 @app.post("/rag-response/{user_id}")
 def rag_response(user_id: str, query: str, knowledge_base: str):
-    current_user = serializer(get_user(user_id))
+    current_user = get_user(user_id)
+    print(current_user)
     full_history = None
     buffer_history = None
     user_full_history = current_user["full_history"]
