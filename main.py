@@ -68,7 +68,7 @@ def create_user(user: User):
     new_user["full_history"] = sample_dict
     new_user["buffer_history"] = sample_dict
     collection.insert_one(new_user)
-    return serializer(get_last_added_item())
+    return serializer(collection.find_one({"name": new_user["name"]}))
 
 # Update user information
 @app.put("/update-user/{id}")
