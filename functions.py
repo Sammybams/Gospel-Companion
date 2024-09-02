@@ -216,7 +216,10 @@ def get_lesson_link(lessson_number, group):
     soup_g = bs(r_g.content)
     group_suffix = soup_g.find_all(class_ = "views-field views-field-title")[1].a['href']
     group_title = soup_g.find_all(class_ = "views-field views-field-title")[1].a.text
-    return group_title, base_link+group_suffix
+    result = dict()
+    result['topic'] = group_title
+    result['link'] = base_link+group_suffix
+    return result
 
 def package_sources(source_names, group):
     source_names = source_names[:3]

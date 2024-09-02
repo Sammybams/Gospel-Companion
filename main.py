@@ -1,15 +1,23 @@
 from fastapi import FastAPI, Path
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pydantic import BaseModel
 from functions import elementary_db, junior_db, senior_db
 from functions import context_document_retreival_similarity, get_conversation_summary
 from functions import qa_response, package_sources
 from config.database import client, collection
-from schemas.schema import serializer, get_last_added_item
+from schemas.schema import serializer
 from bson import ObjectId
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # users = {
 #     1: {
@@ -153,4 +161,8 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
     updated.buffer_history = user_buffer_history
     update_user(user_id, updated)
 
-    return response, ref_titles_links
+    result = dict()
+    result['response'] = response
+    result['references'] = ref_titles_links
+
+    return result

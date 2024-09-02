@@ -13,3 +13,5 @@ pyvenv.cfg
 hashing.py
 jwttoken.py
 oauth.py
+/frontend/node_modules
+/Scripts/
