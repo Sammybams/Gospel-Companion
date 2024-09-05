@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import * as Realm from "realm-web";
@@ -15,22 +16,34 @@ const Layout = () => {
     }
   };
 
+  const signupGoogle = async () => {
+    const redirectUrl = "http://localhost:5173";
+    const user: Realm.User = await app.logIn(
+      Realm.Credentials.google({ redirectUrl })
+    );
+    console.log("user: ", user);
+    return user;
+  };
+
   useEffect(() => {
     console.log("app.currentUser: ", app.currentUser);
   }, []);
 
   return (
     <div className="flex flex-col h-full">
-      <header className="bg-[#222222] text-white p-4" role={"banner"}>
+      <header className="bg-[#222222] text-white h-[10dvh] p-4" role={"banner"}>
         <div className="flex items-center justify-between">
           <Link to="/" className="font-bold">
             Gospel Companion
           </Link>
           {/* no need to show "Sign Up" on the header when on the auth path or a user is available */}
           {pathname !== "/auth" && !app?.currentUser && (
-            <Link to="auth" className="cursor-pointer hover:text-blue-500">
+            <Button
+              onClick={signupGoogle}
+              className="cursor-pointer hover:text-blue-500"
+            >
               Sign Up
-            </Link>
+            </Button>
           )}
           {app.currentUser && <p>Welcome, {app.currentUser?.id}</p>}
           {app.currentUser && (
