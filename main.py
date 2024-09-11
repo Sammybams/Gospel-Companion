@@ -107,7 +107,7 @@ def update_user(user_id: str, user: UpdateUser):
     collection.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
     # return users[user_id]
 
-@app.post("/rag-response/{user_id}")
+@app.post("/rag-response/{user_email_address}")
 def rag_response(user_email_address: str, query: str, knowledge_base: str):
     current_user = get_user(user_email_address)
     print(current_user)
