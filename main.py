@@ -57,9 +57,9 @@ def index():
     return {"Project": "Gospel Companion"}
 
 # Get users by ID
-@app.get("/get-user/{user_id}")
-def get_user(user_id: str):
-    return serializer(collection.find_one({"_id": ObjectId(user_id)}))
+@app.get("/get-user/{user_email_address}")
+def get_user(user_email_address: str):
+    return serializer(collection.find_one({"email_address": user_email_address}))
 
 @app.get("/get-users")
 def get_users():
@@ -108,8 +108,8 @@ def update_user(user_id: str, user: UpdateUser):
     # return users[user_id]
 
 @app.post("/rag-response/{user_id}")
-def rag_response(user_id: str, query: str, knowledge_base: str):
-    current_user = get_user(user_id)
+def rag_response(user_email_address: str, query: str, knowledge_base: str):
+    current_user = get_user(user_email_address)
     print(current_user)
     full_history = None
     buffer_history = None
@@ -159,7 +159,7 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
     updated = UpdateUser()
     updated.full_history = user_full_history
     updated.buffer_history = user_buffer_history
-    update_user(user_id, updated)
+    update_user(current_user["id"], updated)
 
     result = dict()
     result['response'] = response
