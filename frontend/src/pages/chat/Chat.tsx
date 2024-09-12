@@ -27,6 +27,14 @@ import { ExampleList } from "../../components/Example";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { VectorSettings } from "../../components/VectorSettings";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 //import { useMsal } from "@azure/msal-react";
 import * as Realm from "realm-web";
 import axios from "axios";
@@ -44,6 +52,8 @@ type RagResponse = {
   response: "";
   references: References[];
 };
+
+type KnowledgeBase = "e" | "j" | "s";
 
 const Chat = () => {
   const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
@@ -69,7 +79,6 @@ const Chat = () => {
   const [gpt4vInput, setGPT4VInput] = useState<GPT4VInput>(
     GPT4VInput.TextAndImages
   );
-  const [useGPT4V, setUseGPT4V] = useState<boolean>(false);
 
   const lastQuestionRef = useRef<string>("");
   const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -85,6 +94,7 @@ const Chat = () => {
     [user: string, response: ChatAppResponse][]
   >([]);
   const [showGPT4VOptions, setShowGPT4VOptions] = useState<boolean>(false);
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase>("s");
 
   const makeApiRequest = async (question: string) => {
     lastQuestionRef.current = question;
@@ -133,32 +143,42 @@ const Chat = () => {
   };
 
   const makeApiRequest_local = async (question: string) => {
-    // const user_id = app.currentUser?.id;
-    const user_id = "66c6227ed0c7cd5fd05d66ff";
-    const knowledgeBase = "j";
+    lastQuestionRef.current = question;
 
-    if (!user_id) {
-      console.log("No logged in user");
+    // error && setError(undefined);
+    setIsLoading(true);
+    setActiveCitation(undefined);
+
+    const email = app.currentUser?.profile?.email;
+
+    if (!email?.length) {
+      setError("No logged in user");
     }
-    const { data, status } = await axios.post<RagResponse>(
-      `/rag-response/${user_id}?query=${question}&knowledge_base=${knowledgeBase}`
-    );
-    console.log("data: ", data);
-    if (status === 200) {
-      let { response, references } = data;
-      let referencesString: string = "";
-      references?.map(
-        ({ topic, link }) => (referencesString += "\n" + topic + "\n" + link)
+
+    try {
+      const { data, status } = await axios.post<RagResponse>(
+        `/rag-response/${email}?query=${question}&knowledge_base=${knowledgeBase}`
       );
-      response += "\n" + referencesString;
-      const parsedResponse = { message: response };
-      setAnswers([...answers, [question, parsedResponse]]);
+      if (status === 200) {
+        let { response, references } = data;
+        let referencesString: string = "";
+        references?.map(
+          ({ topic, link }) => (referencesString += "\n" + topic + "\n" + link)
+          // (referencesString += [link])
+        );
+        response += "\n" + referencesString;
+        const parsedResponse = { message: response };
+        setAnswers([...answers, [question, parsedResponse]]);
+      } else {
+        // throw error;
+      }
+    } catch (error) {
+      console.error(`Chat Error: ${error}`);
+      setError(error);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    console.log("answers: ", answers);
-  }, [answers]);
 
   const clearChat = () => {
     lastQuestionRef.current = "";
@@ -173,10 +193,6 @@ const Chat = () => {
     () => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }),
     [isLoading]
   );
-  //useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "auto" }), [streamedAnswers]);
-  // useEffect(() => {
-  //     getConfig();
-  // }, []);
 
   const onPromptTemplateChange = (
     _ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -242,7 +258,6 @@ const Chat = () => {
   };
 
   const onExampleClicked = (example: string) => {
-    // makeApiRequest(example);
     makeApiRequest_local(example);
   };
 
@@ -257,9 +272,27 @@ const Chat = () => {
     setSelectedAnswer(index);
   };
 
+  const handleSelect = (value: KnowledgeBase) => {
+    setKnowledgeBase(value);
+  };
+
+  useEffect(() => {
+    console.log("knowledgeBase: ", knowledgeBase);
+  }, [knowledgeBase]);
+
   return (
     <div className={styles.container}>
-      <div className={styles.commandsContainer}>
+      <div className="flex items-center justify-center gap-4 self-end p-4">
+        <Select onValueChange={handleSelect}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select knowledge base" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="e">Elementary</SelectItem>
+            <SelectItem value="j">Junior</SelectItem>
+            <SelectItem value="s">Senior</SelectItem>
+          </SelectContent>
+        </Select>
         <ClearChatButton
           className={styles.commandButton}
           onClick={clearChat}
@@ -277,38 +310,15 @@ const Chat = () => {
                 aria-label="Chat logo"
               />
               <h1 className="text-center font-semibold text-4xl py-8 px-4">
-                Chat with your Sunday School Book
+                Chat with Your Bible Study Guide
               </h1>
               <h2 className={styles.chatEmptyStateSubtitle}>
                 Ask anything or try an example
               </h2>
-              <ExampleList
-                onExampleClicked={onExampleClicked}
-                useGPT4V={useGPT4V}
-              />
+              <ExampleList onExampleClicked={onExampleClicked} />
             </div>
           ) : (
             <div className={styles.chatMessageStream}>
-              {/* {isStreaming &&
-                                streamedAnswers.map((streamedAnswer, index) => (
-                                    <div key={index}>
-                                        <UserChatMessage message={streamedAnswer[0]} />
-                                        <div className={styles.chatMessageGpt}>
-                                            <Answer
-                                                isStreaming={true}
-                                                key={index}
-                                                answer={streamedAnswer[1]}
-                                                isSelected={false}
-                                                onCitationClicked={c => onShowCitation(c, index)}
-                                                onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab, index)}
-                                                onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab, index)}
-                                                onFollowupQuestionClicked={q => makeApiRequest(q)}
-                                                showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
-                                            />
-                                        </div>
-                                    </div>
-                                ))} */}
-              {/* {!isStreaming && */}
               {answers?.map((answer, index) => (
                 <div key={index}>
                   <UserChatMessage message={answer[0]} />
@@ -321,7 +331,6 @@ const Chat = () => {
                       onCitationClicked={(c) => onShowCitation(c, index)}
                       onThoughtProcessClicked={() => {}} // {() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab, index)}
                       onSupportingContentClicked={() => {}} // {() => onToggleTab(AnalysisPanelTabs.SupportingContentTab, index)}
-                      // onFollowupQuestionClicked={(q) => makeApiRequest(q)}
                       onFollowupQuestionClicked={(q) => makeApiRequest_local(q)}
                       showFollowupQuestions={
                         useSuggestFollowupQuestions &&
@@ -345,7 +354,6 @@ const Chat = () => {
                   <div className={styles.chatMessageGptMinWidth}>
                     <AnswerError
                       error={error.toString()}
-                      // onRetry={() => makeApiRequest(lastQuestionRef.current)}
                       onRetry={() =>
                         makeApiRequest_local(lastQuestionRef.current)
                       }
@@ -362,7 +370,6 @@ const Chat = () => {
               clearOnSend
               placeholder="Type a new question (e.g. what are some examples of applying faith?)"
               disabled={isLoading}
-              // onSend={(question) => makeApiRequest(question)}
               onSend={(question) => makeApiRequest_local(question)}
             />
           </div>
@@ -421,16 +428,6 @@ const Chat = () => {
             checked={useSuggestFollowupQuestions}
             label="Suggest follow-up questions"
             onChange={onUseSuggestFollowupQuestionsChange}
-          />
-
-          <VectorSettings
-            showImageOptions={useGPT4V && showGPT4VOptions}
-            updateVectorFields={(options: VectorFieldOptions[]) =>
-              setVectorFieldList(options)
-            }
-            updateRetrievalMode={(retrievalMode: RetrievalMode) =>
-              setRetrievalMode(retrievalMode)
-            }
           />
 
           <Checkbox
