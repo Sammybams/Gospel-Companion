@@ -15,8 +15,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
+const MIN_LENGTH = 6;
+const FIELD_VALIDATION = {
+  TEST: {
+    SPECIAL_CHAR: (value: string) =>
+      /[-._!"`'#%&,:;<>=@{}~\$\(\)\*\+\/\\\?\[\]\^\|]+/.test(value),
+    NUMBER: (value: string) => /.*[0-9].*/.test(value),
+  },
+  MSG: {
+    MIN_LEN: `Password must have ${MIN_LENGTH} characters`,
+    SPECIAL_CHAR: "Password must contain at least one special character",
+    NUMBER: "Password must contain at least one number",
+    MATCH: "Password must match",
+  },
+};
+
 const app = new Realm.App({ id: import.meta.env.VITE_REALM_APP_ID });
 const redirectUrl = "http://localhost:5173";
+
+const addFieldIssue = (field: string, ctx: z.RefinementCtx) => {
+  ctx.addIssue({
+    code: "custom",
+    message: FIELD_VALIDATION.MSG.MATCH,
+    path: [field],
+    fatal: true,
+  });
+};
 
 const login = async (email: string, password: string) => {
   const credentials = Realm.Credentials.emailPassword(email, password);
@@ -42,10 +66,36 @@ const signupGoogle = async () => {
   return user;
 };
 
-const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(5, { message: "Must be 5 or more characters long" }),
-});
+const formSchema = z
+  .object({
+    email: z.string().email({ message: "Invalid email address" }),
+    password: z
+      .string()
+      .min(MIN_LENGTH, {
+        message: FIELD_VALIDATION.MSG.MIN_LEN,
+      })
+      .refine(
+        FIELD_VALIDATION.TEST.SPECIAL_CHAR,
+        FIELD_VALIDATION.MSG.SPECIAL_CHAR
+      )
+      .refine(FIELD_VALIDATION.TEST.NUMBER, FIELD_VALIDATION.MSG.NUMBER),
+    confirmPassword: z
+      .string()
+      .min(MIN_LENGTH, {
+        message: FIELD_VALIDATION.MSG.MIN_LEN,
+      })
+      .refine(
+        FIELD_VALIDATION.TEST.SPECIAL_CHAR,
+        FIELD_VALIDATION.MSG.SPECIAL_CHAR
+      )
+      .refine(FIELD_VALIDATION.TEST.NUMBER, FIELD_VALIDATION.MSG.NUMBER),
+  })
+  .superRefine(({ confirmPassword, password }, ctx) => {
+    if (confirmPassword !== password) {
+      addFieldIssue("password", ctx);
+      addFieldIssue("confirmPassword", ctx);
+    }
+  });
 
 const SignUp = () => {
   const nav = useNavigate();
@@ -56,6 +106,7 @@ const SignUp = () => {
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -104,6 +155,19 @@ const SignUp = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input placeholder="abcd1234" type="password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
               <FormControl>
                 <Input placeholder="abcd1234" type="password" {...field} />
               </FormControl>
