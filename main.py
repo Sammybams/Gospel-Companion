@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Path
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pydantic import BaseModel
 from functions import elementary_db, junior_db, senior_db
 from functions import context_document_retreival_similarity, get_conversation_summary
 from functions import qa_response, package_sources
-from config.database import client, collection
+from config.database import collection
 from schemas.schema import serializer
 from bson import ObjectId
 
@@ -47,9 +47,9 @@ class User(BaseModel):
     buffer_history: dict
 
 class UpdateUser(BaseModel):
-    name: Optional[str] = None
-    full_history: Optional[dict] = None
-    buffer_history: Optional[dict] = None
+    user_email: Optional[str] = None
+    full_history: Optional[dict[str, list]] = None
+    buffer_history: Optional[dict[str, list]] = None
 
 # Home
 @app.get("/")
@@ -59,7 +59,9 @@ def index():
 # Get users by ID
 @app.get("/get-user/{user_email_address}")
 def get_user(user_email_address: str):
-    return serializer(collection.find_one({"email_address": user_email_address}))
+    # Adjusted the query to reflect the new location of the email address
+    user = collection.find_one({"user.data.email": user_email_address})
+    return serializer(user)
 
 @app.get("/get-users")
 def get_users():
@@ -79,33 +81,32 @@ def create_user(user: User):
     return serializer(collection.find_one({"name": new_user["name"]}))
 
 # Update user information
-@app.put("/update-user/{id}")
+@app.put("/update-user/{user_id}")
 def update_user(user_id: str, user: UpdateUser):
+    # Find the user by ObjectId
     existing_user = collection.find_one({"_id": ObjectId(user_id)})
 
     if not existing_user:
         return {"Error": "User does not exist"}
-    
-    existing_user = serializer(existing_user)
+
     update_data = {}
 
-    if user.name != None:
-        update_data['name'] = user.name
-    else:
-        update_data['name'] = existing_user['name']
+    # Update email if provided
+    if user.user_email is not None:
+        update_data['user.data.email'] = user.user_email
 
-    if user.full_history != None:
+    # Update full_history if provided
+    if user.full_history is not None:
         update_data['full_history'] = user.full_history
-    else:
-        update_data['full_history'] = existing_user['full_history']
 
-    if user.buffer_history != None:
-        update_data['buffer_history'] = user.buffer_history  
-    else:
-        update_data['buffer_history'] = existing_user['buffer_history']
+    # Update buffer_history if provided
+    if user.buffer_history is not None:
+        update_data['buffer_history'] = user.buffer_history
 
+    # Perform the update operation
     collection.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
-    # return users[user_id]
+
+    return {"message": "User updated successfully"}
 
 @app.post("/rag-response/{user_email_address}")
 def rag_response(user_email_address: str, query: str, knowledge_base: str):
