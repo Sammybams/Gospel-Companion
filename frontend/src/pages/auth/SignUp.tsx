@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,6 +16,31 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
 const app = new Realm.App({ id: import.meta.env.VITE_REALM_APP_ID });
+const redirectUrl = "http://localhost:5173";
+
+const login = async (email: string, password: string) => {
+  const credentials = Realm.Credentials.emailPassword(email, password);
+  const authedUser = await app.logIn(credentials);
+  console.assert(authedUser.id === app.currentUser?.id);
+  return authedUser;
+};
+
+const signup = async (email: string, password: string) => {
+  try {
+    await app.emailPasswordAuth.registerUser({ email, password });
+    // log in automatically
+    return login(email, password);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const signupGoogle = async () => {
+  const user: Realm.User = await app.logIn(
+    Realm.Credentials.google({ redirectUrl })
+  );
+  return user;
+};
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -26,23 +50,6 @@ const formSchema = z.object({
 const SignUp = () => {
   const nav = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  const login = async (email: string, password: string) => {
-    const credentials = Realm.Credentials.emailPassword(email, password);
-    const authedUser = await app.logIn(credentials);
-    console.assert(authedUser.id === app.currentUser?.id);
-    return authedUser;
-  };
-
-  const signup = async (email: string, password: string) => {
-    try {
-      await app.emailPasswordAuth.registerUser({ email, password });
-      // log in automatically
-      return login(email, password);
-    } catch (error) {
-      throw error;
-    }
-  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,11 +67,17 @@ const SignUp = () => {
     } else {
       user = await signup(email, password);
     }
+
     if (user && Object.keys(user)) {
       console.log("user: ", user);
       nav("/");
     }
   }
+
+  const handleSignUpWithGoogle = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    await signupGoogle();
+  };
 
   return (
     <Form {...form}>
@@ -102,8 +115,11 @@ const SignUp = () => {
           <Button type="submit" className="">
             Sign Up
           </Button>
+          <Button variant="secondary" onClick={handleSignUpWithGoogle} disabled>
+            Sign Up With Google
+          </Button>
           <Button
-            variant="secondary"
+            variant="link"
             type="submit"
             onClick={() => setIsLoggingIn(true)}
           >
