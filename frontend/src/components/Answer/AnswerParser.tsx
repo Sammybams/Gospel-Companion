@@ -2,32 +2,36 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { getCitationFilePath } from "../../api";
 
 type HtmlParsedAnswer = {
-    answerHtml: string;
-    citations: string[];
+  answerHtml: string;
+  citations: string[];
 };
 
-export function parseAnswerToHtml(answer: string, isStreaming: boolean, onCitationClicked: (citationFilePath: string) => void): HtmlParsedAnswer {
-    const citations: string[] = [];
+export function parseAnswerToHtml(
+  answer: string,
+  isStreaming: boolean,
+  onCitationClicked: (citationFilePath: string) => void
+): HtmlParsedAnswer {
+  const citations: string[] = [];
 
-    // trim any whitespace from the end of the answer after removing follow-up questions
-    let parsedAnswer = answer.trim();
+  // trim any whitespace from the end of the answer after removing follow-up questions
+  let parsedAnswer = answer.trim();
 
-    // Omit a citation that is still being typed during streaming
-    if (isStreaming) {
-        let lastIndex = parsedAnswer.length;
-        for (let i = parsedAnswer.length - 1; i >= 0; i--) {
-            if (parsedAnswer[i] === "]") {
-                break;
-            } else if (parsedAnswer[i] === "[") {
-                lastIndex = i;
-                break;
-            }
-        }
-        const truncatedAnswer = parsedAnswer.substring(0, lastIndex);
-        parsedAnswer = truncatedAnswer;
+  // Omit a citation that is still being typed during streaming
+  if (isStreaming) {
+    let lastIndex = parsedAnswer.length;
+    for (let i = parsedAnswer.length - 1; i >= 0; i--) {
+      if (parsedAnswer[i] === "]") {
+        break;
+      } else if (parsedAnswer[i] === "[") {
+        lastIndex = i;
+        break;
+      }
     }
+    const truncatedAnswer = parsedAnswer.substring(0, lastIndex);
+    parsedAnswer = truncatedAnswer;
+  }
 
-    /* This parses out the citations, but for the dev guide we don't need this functionality currently.
+  /* This parses out the citations, but for the dev guide we don't need this functionality currently.
     const parts = parsedAnswer.split(/\[([^\]]+)\]/g);
 
     const fragments: string[] = parts.map((part, index) => {
@@ -53,11 +57,10 @@ export function parseAnswerToHtml(answer: string, isStreaming: boolean, onCitati
     });
     */
 
-    const fragments: string[] = [parsedAnswer];
+  const fragments: string[] = [parsedAnswer];
 
-
-    return {
-        answerHtml: fragments.join(""),
-        citations
-    };
+  return {
+    answerHtml: fragments.join(""),
+    citations,
+  };
 }
