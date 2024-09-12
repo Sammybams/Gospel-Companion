@@ -3,15 +3,9 @@ import { Example } from "./Example";
 import styles from "./Example.module.css";
 
 const DEFAULT_EXAMPLES: string[] = [
-  "What was the memory verse for the last Sunday School lesson?",
-  "What is the meaning of the name 'Jesus'?",
-  "What is the way to eternal life?",
-];
-
-const GPT4V_EXAMPLES: string[] = [
-  "Compare the impact of interest rates and GDP in financial markets.",
-  "What is the expected trend for the S&P 500 index over the next five years? Compare it to the past S&P 500 performance",
-  "Can you identify any correlation between oil prices and stock market trends?",
+  "What is the story of David and Goliath about?",
+  "What does the parable of the Good Samaritan teach?",
+  "Explain the need for Salvation",
 ];
 
 interface Props {
@@ -22,7 +16,7 @@ interface Props {
 export const ExampleList = ({ onExampleClicked, useGPT4V }: Props) => {
   return (
     <ul className={styles.examplesNavList}>
-      {(useGPT4V ? GPT4V_EXAMPLES : DEFAULT_EXAMPLES).map((question, i) => (
+      {DEFAULT_EXAMPLES.map((question, i) => (
         <li key={i}>
           <Example
             text={question}
