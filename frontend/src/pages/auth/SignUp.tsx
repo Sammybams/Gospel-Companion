@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import * as Realm from "realm-web";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,25 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
-type User = {
-  email: string;
-  password: string;
-};
-
 const app = new Realm.App({ id: import.meta.env.VITE_REALM_APP_ID });
-const signup = async (userData: User) => {
-  const { email, password } = userData;
-  const user: Realm.User = await app.logIn(
-    Realm.Credentials.emailPassword(email, password) //!fix this
-  );
-  return user;
-};
-
-const signupAnon = async () => {
-  const user: Realm.User = await app.logIn(Realm.Credentials.anonymous());
-  console.assert(user.id === app.currentUser?.id);
-  return user;
-};
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -43,10 +25,24 @@ const formSchema = z.object({
 
 const SignUp = () => {
   const nav = useNavigate();
-  const [userData, setUserData] = useState<User>({
-    email: "",
-    password: "",
-  });
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const login = async (email: string, password: string) => {
+    const credentials = Realm.Credentials.emailPassword(email, password);
+    const authedUser = await app.logIn(credentials);
+    console.assert(authedUser.id === app.currentUser?.id);
+    return authedUser;
+  };
+
+  const signup = async (email: string, password: string) => {
+    try {
+      await app.emailPasswordAuth.registerUser({ email, password });
+      // log in automatically
+      return login(email, password);
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,9 +53,15 @@ const SignUp = () => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const user = await signup(values);
-    if (user) {
-      console.log("signup response: ", user);
+    const { email, password } = values;
+    let user = {};
+    if (isLoggingIn) {
+      user = await login(email, password);
+    } else {
+      user = await signup(email, password);
+    }
+    if (user && Object.keys(user)) {
+      console.log("user: ", user);
       nav("/");
     }
   }
@@ -96,16 +98,17 @@ const SignUp = () => {
             </FormItem>
           )}
         />
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           <Button type="submit" className="">
             Sign Up
           </Button>
-          <p
-            className="text-slate-600 cursor-pointer"
-            onClick={() => signupAnon()}
+          <Button
+            variant="secondary"
+            type="submit"
+            onClick={() => setIsLoggingIn(true)}
           >
-            or sign up anonymously instead
-          </p>
+            or Log In instead
+          </Button>
         </div>
       </form>
     </Form>
