@@ -33,7 +33,9 @@ jobs:
           sudo apt-get install sqlite3 libsqlite3-dev
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pysqlite3-binary
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
