@@ -120,6 +120,7 @@ Pygments==2.18.0
 pymongo==3.11.0
 PyPika==0.48.9
 pyproject_hooks==1.1.0
+pysqlite3-binary
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-jose==3.3.0
