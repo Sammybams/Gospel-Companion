@@ -32,7 +32,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install sqlite3 libsqlite3-dev
       
-      - name: Install dependencies
+      - name: Install dependencies and Pass Environment Variables and Run Scripts
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          ENDPOINT: ${{ secrets.ENDPOINT }}
+          MONGODB_CONNECTION_STRING: ${{ secrets.MONGODB_CONNECTION_STRING }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
+
         run: |
           pip install -r requirements.txt
           pip install pysqlite3-binary
