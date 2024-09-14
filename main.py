@@ -115,60 +115,63 @@ def update_user(user_id: str, user: UpdateUser):
 
 @app.post("/rag-response/{user_email_address}")
 def rag_response(user_email_address: str, query: str, knowledge_base: str):
-    current_user = get_user(user_email_address)
-    print(current_user)
-    full_history = None
-    buffer_history = None
-    user_full_history = current_user["full_history"]
-    user_buffer_history = current_user["buffer_history"]
+    try:
+        current_user = get_user(user_email_address)
+        print(current_user)
+        full_history = None
+        buffer_history = None
+        user_full_history = current_user["full_history"]
+        user_buffer_history = current_user["buffer_history"]
 
-    knowledge_base_group = None
-    vector_db, prompt_template = None, None
-    if knowledge_base=='e':
-        vector_db, prompt_template = elementary_db()
-        full_history = current_user["full_history"]["e"]
-        buffer_history = current_user["buffer_history"]["e"]
-        knowledge_base_group = 3
+        knowledge_base_group = None
+        vector_db, prompt_template = None, None
+        if knowledge_base=='e':
+            vector_db, prompt_template = elementary_db()
+            full_history = current_user["full_history"]["e"]
+            buffer_history = current_user["buffer_history"]["e"]
+            knowledge_base_group = 3
 
-    elif knowledge_base=='j':
-        vector_db, prompt_template = junior_db()
-        full_history = current_user["full_history"]["j"]
-        buffer_history = current_user["buffer_history"]["j"]
-        knowledge_base_group = 2
+        elif knowledge_base=='j':
+            vector_db, prompt_template = junior_db()
+            full_history = current_user["full_history"]["j"]
+            buffer_history = current_user["buffer_history"]["j"]
+            knowledge_base_group = 2
 
-    else:
-        vector_db, prompt_template = senior_db()
-        full_history = current_user["full_history"]["s"]
-        buffer_history = current_user["buffer_history"]["s"]
-        knowledge_base_group = 1
+        else:
+            vector_db, prompt_template = senior_db()
+            full_history = current_user["full_history"]["s"]
+            buffer_history = current_user["buffer_history"]["s"]
+            knowledge_base_group = 1
 
-    new_question = query
-    if len(buffer_history)>0:
-        new_question = get_conversation_summary("\n".join(buffer_history), query)
-    
-    print(new_question)
-    documents, sources = context_document_retreival_similarity(new_question, vector_db)
-    full_prompt = prompt_template.format(history="\n".join(buffer_history), question=new_question, context=documents)
-    response = qa_response(full_prompt)
-    ref_titles_links = package_sources(sources, knowledge_base_group)
+        new_question = query
+        if len(buffer_history)>0:
+            new_question = get_conversation_summary("\n".join(buffer_history), query)
+        
+        print(new_question)
+        documents, sources = context_document_retreival_similarity(new_question, vector_db)
+        full_prompt = prompt_template.format(history="\n".join(buffer_history), question=new_question, context=documents)
+        response = qa_response(full_prompt)
+        ref_titles_links = package_sources(sources, knowledge_base_group)
 
-    full_history.append(f"Human: {query}")
-    full_history.append(f"AI: {response}")
-    buffer_history.append(f"Human: {query}")
-    buffer_history.append(f"AI: {response}")
+        full_history.append(f"Human: {query}")
+        full_history.append(f"AI: {response}")
+        buffer_history.append(f"Human: {query}")
+        buffer_history.append(f"AI: {response}")
 
-    if len(buffer_history)>10:
-        buffer_history = buffer_history[2:]
+        if len(buffer_history)>10:
+            buffer_history = buffer_history[2:]
 
-    user_full_history[knowledge_base] = full_history
-    user_buffer_history[knowledge_base] = buffer_history
-    updated = UpdateUser()
-    updated.full_history = user_full_history
-    updated.buffer_history = user_buffer_history
-    update_user(current_user["id"], updated)
+        user_full_history[knowledge_base] = full_history
+        user_buffer_history[knowledge_base] = buffer_history
+        updated = UpdateUser()
+        updated.full_history = user_full_history
+        updated.buffer_history = user_buffer_history
+        update_user(current_user["id"], updated)
 
-    result = dict()
-    result['response'] = response
-    result['references'] = ref_titles_links
+        result = dict()
+        result['response'] = response
+        result['references'] = ref_titles_links
+    except Exception as e:
+        print(str(e))
 
     return result
