@@ -14,6 +14,7 @@ from config.database import collection
 from schemas.schema import serializer
 from bson import ObjectId
 
+import logging
 
 app = FastAPI()
 app.add_middleware(
@@ -174,7 +175,10 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
 
         return result
     except Exception as e:
-        print(str(e))
+
+
+        logging.error(f"Error: {str(e)}")
+        print(f"Error: {str(e)})
         return None
 
     # return result
