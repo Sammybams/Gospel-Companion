@@ -118,7 +118,7 @@ def update_user(user_id: str, user: UpdateUser):
 def rag_response(user_email_address: str, query: str, knowledge_base: str):
     try:
         current_user = get_user(user_email_address)
-        print(current_user)
+        # print(current_user)
         full_history = None
         buffer_history = None
         user_full_history = current_user["full_history"]
@@ -148,7 +148,7 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         if len(buffer_history)>0:
             new_question = get_conversation_summary("\n".join(buffer_history), query)
         
-        print(new_question)
+        print(f"New question: {new_question}")
         documents, sources = context_document_retreival_similarity(new_question, vector_db)
         full_prompt = prompt_template.format(history="\n".join(buffer_history), question=new_question, context=documents)
         response = qa_response(full_prompt)
@@ -178,7 +178,7 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
 
 
         logging.error(f"Error: {str(e)}")
-        print(f"Error: {str(e)})
+        print(f"Error: {str(e)}")
         return None
 
     # return result
