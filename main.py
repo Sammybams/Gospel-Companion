@@ -171,7 +171,10 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         result = dict()
         result['response'] = response
         result['references'] = ref_titles_links
+
+        return result
     except Exception as e:
         print(str(e))
+        return None
 
-    return result
+    # return result
