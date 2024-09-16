@@ -15,6 +15,7 @@ from schemas.schema import serializer
 from bson import ObjectId
 
 import logging
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.add_middleware(
@@ -127,18 +128,21 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         knowledge_base_group = None
         vector_db, prompt_template = None, None
         if knowledge_base=='e':
+            print("Elementart")
             vector_db, prompt_template = elementary_db()
             full_history = current_user["full_history"]["e"]
             buffer_history = current_user["buffer_history"]["e"]
             knowledge_base_group = 3
 
         elif knowledge_base=='j':
+            print("Junior")
             vector_db, prompt_template = junior_db()
             full_history = current_user["full_history"]["j"]
             buffer_history = current_user["buffer_history"]["j"]
             knowledge_base_group = 2
 
         else:
+            print("Senior")
             vector_db, prompt_template = senior_db()
             full_history = current_user["full_history"]["s"]
             buffer_history = current_user["buffer_history"]["s"]
@@ -176,9 +180,10 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         return result
     except Exception as e:
 
-
-        logging.error(f"Error: {str(e)}")
-        print(f"Error: {str(e)}")
-        return None
+        logger.error(f"Failed to connect to tenant: {e}")
+        print(f"Failed to connect to tenant: {e}")
+        # logging.error(f"Error: {str(e)}")
+        # print(f"Error: {str(e)}")
+        # return None
 
     # return result
