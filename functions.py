@@ -70,7 +70,7 @@ def elementary_db():
     vector_store_elementary = Chroma(
         collection_name="Elementary_Lessons",
         embedding_function=openai_embeddings,
-        persist_directory="./chroma_afc_sunday_school_lessons_db",  # Where to save data locally, remove if not neccesary
+        persist_directory="./chroma_afc_sunday_school_lessons_vector_db",  # Where to save data locally, remove if not neccesary
     )
     return vector_store_elementary, prompt
 
@@ -100,7 +100,7 @@ def junior_db():
     vector_store_junior = Chroma(
         collection_name="Junior_Lessons",
         embedding_function=openai_embeddings,
-        persist_directory="./chroma_afc_sunday_school_lessons_db",  # Where to save data locally, remove if not neccesary
+        persist_directory="./chroma_afc_sunday_school_lessons_vector_db",  # Where to save data locally, remove if not neccesary
     )
     return vector_store_junior, prompt
 
@@ -131,7 +131,7 @@ def senior_db():
     vector_store_senior = Chroma(
         collection_name="Senior_Lessons",
         embedding_function=openai_embeddings,
-        persist_directory="./chroma_afc_sunday_school_lessons_db",  # Where to save data locally, remove if not neccesary
+        persist_directory="./chroma_afc_sunday_school_lessons_vector_db",  # Where to save data locally, remove if not neccesary
     )
     return vector_store_senior, prompt
 
