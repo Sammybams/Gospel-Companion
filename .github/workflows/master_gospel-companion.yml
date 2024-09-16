@@ -27,10 +27,10 @@ jobs:
           python -m venv venv
           source venv/bin/activate
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install sqlite3 libsqlite3-dev
+      # - name: Install system dependencies
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install sqlite3 libsqlite3-dev
       
       - name: Install dependencies and Pass Environment Variables and Run Scripts
         env:
