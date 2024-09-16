@@ -15,7 +15,8 @@ from schemas.schema import serializer
 from bson import ObjectId
 
 import logging
-logger = logging.getLogger(__name__)
+import traceback
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = FastAPI()
 app.add_middleware(
@@ -180,7 +181,7 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         return result
     except Exception as e:
 
-        logger.error(f"Failed to connect to tenant: {e}")
+        logging.error("An error occurred", exc_info=True)
         print(f"Failed to connect to tenant: {e}")
         # logging.error(f"Error: {str(e)}")
         # print(f"Error: {str(e)}")
