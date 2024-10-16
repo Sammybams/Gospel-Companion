@@ -15,6 +15,8 @@ import openai
 from dotenv import load_dotenv
 load_dotenv()
 
+st.title("Gospel Companion")
+
 # Configure OpenAI API using Azure OpenAI
 openai.api_key = os.getenv("API_KEY")
 openai.api_base = os.getenv("ENDPOINT")

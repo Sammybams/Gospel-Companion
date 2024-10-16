@@ -1,7 +1,7 @@
 # these three lines swap the stdlib sqlite3 lib with the pysqlite3 package
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,9 +14,9 @@ from config.database import collection
 from schemas.schema import serializer
 from bson import ObjectId
 
-import logging
-import traceback
-logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+# import logging
+# import traceback
+# logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = FastAPI()
 app.add_middleware(
@@ -181,7 +181,7 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         return result
     except Exception as e:
 
-        logging.error("An error occurred", exc_info=True)
+        # logging.error("An error occurred", exc_info=True)
         print(f"Failed to connect to tenant: {e}")
         # logging.error(f"Error: {str(e)}")
         # print(f"Error: {str(e)}")
