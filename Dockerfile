@@ -9,7 +9,7 @@ RUN pip install -r requirements.txt
 
 # Copy your application code
 COPY . .
-WORKDIR 
+WORKDIR ./
 
 # Expose port 8000
 EXPOSE 8000
