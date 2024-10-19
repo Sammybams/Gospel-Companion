@@ -24,7 +24,10 @@ const Layout = () => {
           </Link>
           {/* no need to show "Sign Up" on the header when on the auth path or a user is available */}
           {pathname !== "/auth" && !app?.currentUser && (
-            <Link to="auth" className="cursor-pointer hover:text-blue-500">
+            <Link
+              to="auth/signup"
+              className="cursor-pointer hover:text-blue-500"
+            >
               Sign Up
             </Link>
           )}
