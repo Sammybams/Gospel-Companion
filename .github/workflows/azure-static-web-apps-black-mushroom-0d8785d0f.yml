@@ -23,7 +23,7 @@ jobs:
 
       # Add a step to make build.sh executable
       - name: Make build script executable
-        run: chmod +x ./build.sh
+        run: chmod +x ./frontend/build.sh
 
       # Run the build.sh script
       - name: Run build script
