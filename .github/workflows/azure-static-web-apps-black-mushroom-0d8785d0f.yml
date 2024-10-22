@@ -27,7 +27,7 @@ jobs:
 
       # Run the build.sh script
       - name: Run build script
-        run: ./build.sh
+        run: ./frontend/build.sh
       
       - name: Build And Deploy
         id: builddeploy
