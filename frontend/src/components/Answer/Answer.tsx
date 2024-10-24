@@ -31,7 +31,6 @@ export const Answer = ({
 }: Props) => {
   //const followupQuestions = answer.choices[0].context.followup_questions;
   const messageContent = answer.message; //answer.choices[0].message.content;
-  console.log("messageContent: ", messageContent);
   const parsedAnswer = useMemo(
     () => parseAnswerToHtml(messageContent, isStreaming, onCitationClicked),
     [answer]
