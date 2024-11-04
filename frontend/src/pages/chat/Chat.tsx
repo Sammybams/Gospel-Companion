@@ -276,8 +276,8 @@ const Chat = () => {
     setSelectedAnswer(index);
   };
 
-  const handleSelect = (value: KnowledgeBase) => {
-    setKnowledgeBase(value);
+  const handleSelect = (value: string) => {
+    setKnowledgeBase(value as KnowledgeBase);
   };
 
   return (
