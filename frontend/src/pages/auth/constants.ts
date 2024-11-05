@@ -1,4 +1,5 @@
 import * as Realm from "realm-web";
+import { z } from "zod";
 
 const app = new Realm.App({ id: import.meta.env.VITE_REALM_APP_ID });
 const redirectUrl = "http://localhost:5173";
