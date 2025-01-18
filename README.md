@@ -15,7 +15,7 @@
 
 - **Python** 🐍: Core programming language used for development.
 - **Langchain** 🔗: Framework used to build the language model-based workflows.
-- **Azure OpenAI Service** ☁️: Provides access to the GPT-3.5 Turbo model.
+- **Azure OpenAI Service** ☁️: Provides access to the gpt-4o-mini model.
 - **ChromaDB** 🗂️: An open-source vector database used to store and retrieve embeddings, enabling the RAG solution.
 
 ## License 📄
