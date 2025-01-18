@@ -80,7 +80,7 @@ def index():
     return {"Project": "Gospel Companion"}
 
 # Get users by ID
-@app.get("/get-user/{user_email_address}")
+@app.get("/get-user/{user_id}")
 def get_user(user_id: str):
     # Adjusted the query to reflect the new location of the email address
     user = collection.find_one({"user_id": user_id})
@@ -93,11 +93,12 @@ def get_users():
 
 # Create new user
 @app.post("/create-user")
-def create_user(user: User):
+def create_user():
     # if user_id in users:
     #     return {"Error": "User exists"}
     # users[user_id] = user
-    new_user = dict(user)
+    new_user = dict()
+    new_user["user_id"] = 0 # some randomly generated id
     new_user["full_history"] = sample_dict
     new_user["buffer_history"] = sample_dict
     collection.insert_one(new_user)
@@ -131,10 +132,10 @@ def update_user(user_id: str, user: UpdateUser):
 
     return {"message": "User updated successfully"}
 
-@app.post("/rag-response/{user_email_address}")
-def rag_response(user_email_address: str, query: str, knowledge_base: str):
+@app.post("/rag-response/{user_id}")
+def rag_response(user_id: str, query: str, knowledge_base: str):
     try:
-        current_user = get_user(user_email_address)
+        current_user = get_user(user_id)
         # print(current_user)
         full_history = None
         buffer_history = None
@@ -144,7 +145,7 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
         knowledge_base_group = None
         vector_db, prompt_template = None, None
         if knowledge_base=='e':
-            print("Elementart")
+            print("Elementary")
             vector_db, prompt_template = elementary_db()
             full_history = current_user["full_history"]["e"]
             buffer_history = current_user["buffer_history"]["e"]
@@ -163,31 +164,39 @@ def rag_response(user_email_address: str, query: str, knowledge_base: str):
             full_history = current_user["full_history"]["s"]
             buffer_history = current_user["buffer_history"]["s"]
             knowledge_base_group = 1
-
+        
+        value = ""
         new_question = query
-        if len(buffer_history)>0:
-            new_question = get_conversation_summary("\n".join(buffer_history), query)
+        if len(buffer_history["responses"])>0:
+            value = ["\n".join(val) for val in buffer_history["responses"]]
+            new_question = get_conversation_summary("\n".join(value), query)
         
         print(f"New question: {new_question}")
         documents, sources = context_document_retreival_similarity(new_question, vector_db)
-        full_prompt = prompt_template.format(history="\n".join(buffer_history), question=new_question, context=documents)
+        full_prompt = prompt_template.format(history="\n".join(value), question=new_question, context=documents)
         response = qa_response(full_prompt)
         ref_titles_links = package_sources(sources, knowledge_base_group)
 
-        full_history.append(f"Human: {query}")
-        full_history.append(f"AI: {response}")
-        buffer_history.append(f"Human: {query}")
-        buffer_history.append(f"AI: {response}")
+        combined = []
+        combined.append(f"Human: {query}")
+        combined.append(f"AI: {response}")
 
-        if len(buffer_history)>10:
-            buffer_history = buffer_history[2:]
+        full_history["responses"].append(combined)
+        full_history["references"].append(ref_titles_links)
+        buffer_history["responses"].append(combined)
+        buffer_history["references"].append(ref_titles_links)
+
+        if len(buffer_history["responses"])>5:
+            buffer_history["responses"] = buffer_history["responses"][1:]
+            buffer_history["references"] = buffer_history["references"][1:]
 
         user_full_history[knowledge_base] = full_history
         user_buffer_history[knowledge_base] = buffer_history
+
         updated = UpdateUser()
         updated.full_history = user_full_history
         updated.buffer_history = user_buffer_history
-        update_user(current_user["id"], updated)
+        update_user(current_user["user_id"], updated)
 
         result = dict()
         result['response'] = response
