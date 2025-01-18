@@ -1,8 +1,7 @@
 from config.database import collection
 def serializer(record):
     return {
-        "id": str(record["_id"]),
-        "email_address": record["user"]["data"]["email"],
+        "user_id": str(record["user_id"]),
         "full_history": record["full_history"],
         "buffer_history": record["buffer_history"]
     }

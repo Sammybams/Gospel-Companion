@@ -49,13 +49,28 @@ sample_dict = {
     "s": [],
 }
 
+sample_dict = {
+    "e": {
+        "responses": [],
+        "references": []
+        },
+    "j": {
+        "responses": [],
+        "references": []
+        },
+    "s": {
+        "responses": [],
+        "references": []
+        }
+}
+
 class User(BaseModel):
-    name: str
+    user_id: str
     full_history: dict
     buffer_history: dict
 
 class UpdateUser(BaseModel):
-    user_email: Optional[str] = None
+    user_id: Optional[str] = None
     full_history: Optional[dict[str, list]] = None
     buffer_history: Optional[dict[str, list]] = None
 
@@ -66,9 +81,9 @@ def index():
 
 # Get users by ID
 @app.get("/get-user/{user_email_address}")
-def get_user(user_email_address: str):
+def get_user(user_id: str):
     # Adjusted the query to reflect the new location of the email address
-    user = collection.find_one({"user.data.email": user_email_address})
+    user = collection.find_one({"user_id": user_id})
     return serializer(user)
 
 @app.get("/get-users")
@@ -86,7 +101,7 @@ def create_user(user: User):
     new_user["full_history"] = sample_dict
     new_user["buffer_history"] = sample_dict
     collection.insert_one(new_user)
-    return serializer(collection.find_one({"name": new_user["name"]}))
+    return serializer(collection.find_one({"unique_id": new_user["unique_id"]}))
 
 # Update user information
 @app.put("/update-user/{user_id}")
