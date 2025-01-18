@@ -203,6 +203,7 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
         result['references'] = ref_titles_links
 
         return result
+    
     except Exception as e:
 
         # logging.error("An error occurred", exc_info=True)

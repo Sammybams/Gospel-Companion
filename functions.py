@@ -37,7 +37,7 @@ openai_embeddings: OpenAIEmbeddings = OpenAIEmbeddings(
 from langchain.chat_models import ChatOpenAI
 
 # LLM
-llm = ChatOpenAI(temperature = 0.6, openai_api_key = os.getenv("API_KEY"), openai_api_base = os.getenv("ENDPOINT"), model_name="gpt-35-turbo", engine="Voicetask")
+llm = ChatOpenAI(temperature = 0.6, openai_api_key = os.getenv("API_KEY"), openai_api_base = os.getenv("ENDPOINT"), model_name="gpt-35-turbo", engine="gpt-4o-mini")
 
 # Handling vector database
 from langchain_chroma import Chroma
@@ -180,7 +180,7 @@ def get_conversation_summary(history, question):
 
     # Query the Azure OpenAI LLM with the formatted prompt
     response = openai.ChatCompletion.create(
-        engine="Voicetask",  # Replace with your Azure OpenAI deployment name
+        engine="gpt-4o-mini",  # Replace with your Azure OpenAI deployment name
         # prompt=formatted_prompt,
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -197,7 +197,7 @@ def qa_response(prompt):
 
     # Query the Azure OpenAI LLM with the formatted prompt
     response = openai.ChatCompletion.create(
-        engine="Voicetask",  # Replace with your Azure OpenAI deployment name
+        engine="gpt-4o-mini",  # Replace with your Azure OpenAI deployment name
         # prompt=formatted_prompt,
         messages=[
             # {"role": "system", "content": "You are a helpful assistant vast in the Bible and its Doctrines."},
