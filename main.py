@@ -5,7 +5,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
+from typing import Optional, Dict, List
 from pydantic import BaseModel
 from functions import elementary_db, junior_db, senior_db
 from functions import context_document_retreival_similarity, get_conversation_summary
@@ -13,6 +13,7 @@ from functions import qa_response, package_sources
 from config.database import collection
 from schemas.schema import serializer
 from bson import ObjectId
+import uuid
 
 # import logging
 # import traceback
@@ -71,8 +72,8 @@ class User(BaseModel):
 
 class UpdateUser(BaseModel):
     user_id: Optional[str] = None
-    full_history: Optional[dict[str, list]] = None
-    buffer_history: Optional[dict[str, list]] = None
+    full_history: Optional[Dict] = None
+    buffer_history: Optional[Dict] = None
 
 # Home
 @app.get("/")
@@ -98,37 +99,37 @@ def create_user():
     #     return {"Error": "User exists"}
     # users[user_id] = user
     new_user = dict()
-    new_user["user_id"] = 0 # some randomly generated id
+    new_user["user_id"] = str(uuid.uuid4()) # some randomly generated id
     new_user["full_history"] = sample_dict
     new_user["buffer_history"] = sample_dict
     collection.insert_one(new_user)
-    return serializer(collection.find_one({"unique_id": new_user["unique_id"]}))
+    return serializer(collection.find_one({"user_id": new_user["user_id"]}))
 
 # Update user information
 @app.put("/update-user/{user_id}")
-def update_user(user_id: str, user: UpdateUser):
+def update_user(user_id: str, user: dict):
     # Find the user by ObjectId
-    existing_user = collection.find_one({"_id": ObjectId(user_id)})
+    existing_user = collection.find_one({"user_id": user_id})
 
     if not existing_user:
         return {"Error": "User does not exist"}
 
-    update_data = {}
+    # update_data = {}
 
-    # Update email if provided
-    if user.user_email is not None:
-        update_data['user.data.email'] = user.user_email
+    # # Update email if provided
+    # if user.user_id is not None:
+    #     update_data['user_id'] = user.user_id
 
-    # Update full_history if provided
-    if user.full_history is not None:
-        update_data['full_history'] = user.full_history
+    # # Update full_history if provided
+    # if user.full_history is not None:
+    #     update_data['full_history'] = user.full_history
 
-    # Update buffer_history if provided
-    if user.buffer_history is not None:
-        update_data['buffer_history'] = user.buffer_history
+    # # Update buffer_history if provided
+    # if user.buffer_history is not None:
+    #     update_data['buffer_history'] = user.buffer_history
 
     # Perform the update operation
-    collection.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+    collection.update_one({"user_id": user_id}, {"$set": user})
 
     return {"message": "User updated successfully"}
 
@@ -136,7 +137,6 @@ def update_user(user_id: str, user: UpdateUser):
 def rag_response(user_id: str, query: str, knowledge_base: str):
     try:
         current_user = get_user(user_id)
-        # print(current_user)
         full_history = None
         buffer_history = None
         user_full_history = current_user["full_history"]
@@ -145,21 +145,21 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
         knowledge_base_group = None
         vector_db, prompt_template = None, None
         if knowledge_base=='e':
-            print("Elementary")
+            # print("Elementary")
             vector_db, prompt_template = elementary_db()
             full_history = current_user["full_history"]["e"]
             buffer_history = current_user["buffer_history"]["e"]
             knowledge_base_group = 3
 
         elif knowledge_base=='j':
-            print("Junior")
+            # print("Junior")
             vector_db, prompt_template = junior_db()
             full_history = current_user["full_history"]["j"]
             buffer_history = current_user["buffer_history"]["j"]
             knowledge_base_group = 2
 
         else:
-            print("Senior")
+            # print("Senior")
             vector_db, prompt_template = senior_db()
             full_history = current_user["full_history"]["s"]
             buffer_history = current_user["buffer_history"]["s"]
@@ -171,7 +171,7 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
             value = ["\n".join(val) for val in buffer_history["responses"]]
             new_question = get_conversation_summary("\n".join(value), query)
         
-        print(f"New question: {new_question}")
+        # print(f"New question: {new_question}")
         documents, sources = context_document_retreival_similarity(new_question, vector_db)
         full_prompt = prompt_template.format(history="\n".join(value), question=new_question, context=documents)
         response = qa_response(full_prompt)
@@ -193,9 +193,11 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
         user_full_history[knowledge_base] = full_history
         user_buffer_history[knowledge_base] = buffer_history
 
-        updated = UpdateUser()
-        updated.full_history = user_full_history
-        updated.buffer_history = user_buffer_history
+        updated = {
+            "user_id": current_user["user_id"],
+            "full_history": user_full_history,
+            "buffer_history": user_buffer_history
+        }
         update_user(current_user["user_id"], updated)
 
         result = dict()

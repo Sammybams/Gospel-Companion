@@ -213,7 +213,7 @@ def qa_response(prompt):
 def get_lesson_link(lessson_number, group):
     base_link_group = f"https://apostolicfaithweca.org/sunday-school-lesson-library?llang=1&slc={group}&title=&Slno={lessson_number}"
     r_g = requests.get(base_link_group)
-    soup_g = bs(r_g.content)
+    soup_g = bs(r_g.content, features="html.parser")
     group_suffix = soup_g.find_all(class_ = "views-field views-field-title")[1].a['href']
     group_title = soup_g.find_all(class_ = "views-field views-field-title")[1].a.text
     result = dict()
