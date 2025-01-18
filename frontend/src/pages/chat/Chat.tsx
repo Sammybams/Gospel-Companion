@@ -53,7 +53,7 @@ type RagResponse = {
   references: References[];
 };
 
-type KnowledgeBase = "e" | "j" | "s";
+type KnowledgeBase = "e" | "j" | "s" | null;
 
 const Chat = () => {
   const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
@@ -94,7 +94,7 @@ const Chat = () => {
     [user: string, response: ChatAppResponse][]
   >([]);
   const [showGPT4VOptions, setShowGPT4VOptions] = useState<boolean>(false);
-  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase>("s");
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase>(null);
 
   const makeApiRequest = async (question: string) => {
     lastQuestionRef.current = question;
@@ -144,6 +144,10 @@ const Chat = () => {
 
   const makeApiRequest_local = async (question: string) => {
     lastQuestionRef.current = question;
+    if (!knowledgeBase) {
+      console.log("No knowledge base selected");
+      return;
+    }
 
     // error && setError(undefined);
     setIsLoading(true);
@@ -272,13 +276,9 @@ const Chat = () => {
     setSelectedAnswer(index);
   };
 
-  const handleSelect = (value: KnowledgeBase) => {
-    setKnowledgeBase(value);
+  const handleSelect = (value: string) => {
+    setKnowledgeBase(value as KnowledgeBase);
   };
-
-  useEffect(() => {
-    console.log("knowledgeBase: ", knowledgeBase);
-  }, [knowledgeBase]);
 
   return (
     <div className={styles.container}>

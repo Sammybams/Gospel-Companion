@@ -9,6 +9,8 @@ import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
 import SignUp from "./pages/auth/SignUp";
 import ErrorBoundary from "./pages/ErrorBoundary";
+import AuthLayout from "./pages/auth/AuthLayout";
+import Login from "./pages/auth/Login";
 
 let layout = <Layout />;
 
@@ -25,7 +27,17 @@ const router = createHashRouter([
       },
       {
         path: "auth",
-        element: <SignUp />,
+        element: <AuthLayout />,
+        children: [
+          {
+            path: "signup",
+            element: <SignUp />,
+          },
+          {
+            path: "login",
+            element: <Login />,
+          },
+        ],
       },
       {
         path: "*",
