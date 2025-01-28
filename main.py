@@ -134,7 +134,8 @@ def update_user(user_id: str, user: dict):
     return {"message": "User updated successfully"}
 
 @app.post("/rag-response/{user_id}")
-def rag_response(user_id: str, query: str, knowledge_base: str):
+def rag_response(user_id: str, query: str, knowledge_base: str, regenerate: bool = False):
+    extra = int(regenerate)
     try:
         current_user = get_user(user_id)
         full_history = None
@@ -167,8 +168,8 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
         
         value = ""
         new_question = query
-        if len(buffer_history["responses"])>0:
-            value = ["\n".join(val) for val in buffer_history["responses"]]
+        if len(buffer_history["responses"])>1:
+            value = ["\n".join(val) for val in buffer_history["responses"][1-extra:len(buffer_history["responses"])-extra]]
             new_question = get_conversation_summary("\n".join(value), query)
         
         # print(f"New question: {new_question}")
@@ -180,13 +181,19 @@ def rag_response(user_id: str, query: str, knowledge_base: str):
         combined = []
         combined.append(f"Human: {query}")
         combined.append(f"AI: {response}")
-
+        
+        if regenerate:
+            full_history["responses"] = full_history["responses"][:-1]
+            full_history["references"] = full_history["references"][:-1]
+            buffer_history["responses"] = buffer_history["responses"][:-1]
+            buffer_history["references"] = buffer_history["references"][:-1]
+        
         full_history["responses"].append(combined)
         full_history["references"].append(ref_titles_links)
         buffer_history["responses"].append(combined)
         buffer_history["references"].append(ref_titles_links)
 
-        if len(buffer_history["responses"])>5:
+        if len(buffer_history["responses"])>6:
             buffer_history["responses"] = buffer_history["responses"][1:]
             buffer_history["references"] = buffer_history["references"][1:]
 
