@@ -13,13 +13,18 @@ from functions import qa_response, package_sources
 from config.database import collection
 from schemas.schema import serializer
 from bson import ObjectId
+import random
 import uuid
 
 # import logging
 # import traceback
 # logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
-app = FastAPI()
+app = FastAPI(
+    title = "Gospel Companion API",
+    description = "API for the Gospel Companion project",
+    version = "1.0.0"
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -76,24 +81,24 @@ class UpdateUser(BaseModel):
     buffer_history: Optional[Dict] = None
 
 # Home
-@app.get("/")
+@app.get("/", tags=["Home"])
 def index():
     return {"Project": "Gospel Companion"}
 
 # Get users by ID
-@app.get("/get-user/{user_id}")
+@app.get("/get-user/{user_id}", tags=["Authentication"])
 def get_user(user_id: str):
     # Adjusted the query to reflect the new location of the email address
     user = collection.find_one({"user_id": user_id})
     return serializer(user)
 
-@app.get("/get-users")
+@app.get("/get-users", tags=["Authentication"])
 def get_users():
     all_users = collection.find()
     return [serializer(user) for user in all_users]
 
 # Create new user
-@app.post("/create-user")
+@app.post("/create-user", tags=["Authentication"])
 def create_user():
     # if user_id in users:
     #     return {"Error": "User exists"}
@@ -106,7 +111,7 @@ def create_user():
     return serializer(collection.find_one({"user_id": new_user["user_id"]}))
 
 # Update user information
-@app.put("/update-user/{user_id}")
+@app.put("/update-user/{user_id}", tags=["Authentication"])
 def update_user(user_id: str, user: dict):
     # Find the user by ObjectId
     existing_user = collection.find_one({"user_id": user_id})
@@ -133,7 +138,7 @@ def update_user(user_id: str, user: dict):
 
     return {"message": "User updated successfully"}
 
-@app.post("/rag-response/{user_id}")
+@app.post("/rag-response/{user_id}", tags=["RAG"])
 def rag_response(user_id: str, query: str, knowledge_base: str, regenerate: bool = False):
     extra = int(regenerate)
     try:
@@ -175,7 +180,13 @@ def rag_response(user_id: str, query: str, knowledge_base: str, regenerate: bool
         # print(f"New question: {new_question}")
         documents, sources = context_document_retreival_similarity(new_question, vector_db)
         full_prompt = prompt_template.format(history="\n".join(value), question=new_question, context=documents)
-        response = qa_response(full_prompt)
+        if regenerate:
+            # Generate random number between 0.3 and 0.8 for temperature if regenerate is True
+            temperature = round(random.uniform(0.3, 0.8), 2)
+            response = qa_response(full_prompt, temp=temperature)
+        else:
+            response = qa_response(full_prompt)
+        
         ref_titles_links = package_sources(sources, knowledge_base_group)
 
         combined = []

@@ -193,7 +193,7 @@ def get_conversation_summary(history, question):
     # Extract and return the summary from the response
     return response.choices[0].message['content']
 
-def qa_response(prompt):
+def qa_response(prompt, temp=0.5):
 
     # Query the Azure OpenAI LLM with the formatted prompt
     response = openai.ChatCompletion.create(
@@ -204,7 +204,7 @@ def qa_response(prompt):
             {"role": "user", "content": prompt}
         ],
         # max_tokens=50,
-        temperature=0.5
+        temperature=temp
     )
     
     # Extract and return the summary from the response
