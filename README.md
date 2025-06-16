@@ -1,4 +1,4 @@
-# GOSPEL COMPANION ✨
+# [GOSPEL COMPANION](https://gospelcompanion.vercel.app/) ✨
 
 **Gospel Companion** is a cutting-edge digital assistant designed to enhance the experience of studying Bible lessons and gospel materials. This project leverages GPT-4o-mini and the open-source ChromaDB as a vector store for a Retrieval-Augmented Generation (RAG) solution, providing a conversational assistant that is aware of conversation history and capable of performing deep dives into Bible lessons and stories.
 
